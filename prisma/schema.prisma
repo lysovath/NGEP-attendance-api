@@ -1,0 +1,149 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider  = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  TRAINER
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  clerkId   String   @unique @map("clerk_id")
+  email     String   @unique
+  role      Role     @default(TRAINER)
+  groupId   Int?     @map("group_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  group              Group?              @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  trainerAttendances TrainerAttendance[]
+
+  @@map("users")
+}
+
+model AllowedUser {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  groupId   Int      @map("group_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@map("allowed_users")
+}
+
+model Group {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  users        User[]
+  allowedUsers AllowedUser[]
+  trainees     Trainee[]
+  groupCourses GroupCourse[]
+
+  @@map("groups")
+}
+
+model Trainee {
+  id        Int      @id @default(autoincrement())
+  studentId String   @unique @map("student_id")
+  name      String
+  email     String   @unique
+  groupId   Int?      @map("group_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  group              Group?               @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  traineeAttendances TraineeAttendance[]
+
+  @@map("trainees")
+}
+
+model Course {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  groupCourses GroupCourse[]
+
+  @@map("courses")
+}
+
+model GroupCourse {
+  id        Int      @id @default(autoincrement())
+  groupId   Int      @map("group_id")
+  courseId  Int      @map("course_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  group    Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  course   Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  sessions Session[]
+
+  @@unique([groupId, courseId])
+  @@map("group_courses")
+}
+
+model Session {
+  id            Int      @id @default(autoincrement())
+  groupCourseId Int      @map("group_course_id")
+  name          String
+  startTime     DateTime @map("start_time")
+  endTime       DateTime @map("end_time")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  groupCourse        GroupCourse         @relation(fields: [groupCourseId], references: [id], onDelete: Cascade)
+  traineeAttendances TraineeAttendance[]
+  trainerAttendances TrainerAttendance[]
+
+  @@map("sessions")
+}
+
+model TraineeAttendance {
+  id        Int              @id @default(autoincrement())
+  traineeId Int              @map("trainee_id")
+  sessionId Int              @map("session_id")
+  status    AttendanceStatus
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt @map("updated_at")
+
+  trainee Trainee @relation(fields: [traineeId], references: [id], onDelete: Cascade)
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([traineeId, sessionId])
+  @@map("trainee_attendance")
+}
+
+model TrainerAttendance {
+  id        Int              @id @default(autoincrement())
+  trainerId Int              @map("trainer_id")
+  sessionId Int              @map("session_id")
+  status    AttendanceStatus
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt @map("updated_at")
+
+  trainer User    @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([trainerId, sessionId])
+  @@map("trainer_attendance")
+}

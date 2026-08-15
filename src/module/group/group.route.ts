@@ -1,7 +1,9 @@
-import type { Request, Response, NextFunction } from "express";
 import { Router } from "express";
+
+import { Role } from "@prisma/client";
 import GroupController from "./group.controller.js";
 import validateSchema from "../../middleware/validateSchema.js";
+import { authorizeGroup } from "../../middleware/authorizeGroup.js";
 import {
   createGroupSchema,
   updateGroupSchema,
@@ -15,16 +17,17 @@ const router = Router();
 
 router.get(
     "/:id",
+    authorizeGroup,
     validateSchema({
         params: groupIdParamSchema.shape.params,
     }),
     GroupController.getGroupById,
 );
 
-router.use(checkRole("ADMIN"));
 
 router.post(
     "/",
+    checkRole(Role.ADMIN),
     validateSchema({
         body: createGroupSchema.shape.body,
     }),
@@ -36,6 +39,7 @@ router.get("/", GroupController.getAllGroups);
 
 router.put(
     "/:id",
+    checkRole(Role.ADMIN),
     validateSchema({
         params: groupIdParamSchema.shape.params,
         body: updateGroupSchema.shape.body,
@@ -45,6 +49,7 @@ router.put(
 
 router.delete(
     "/:id",
+    checkRole(Role.ADMIN),
     validateSchema({
         params: groupIdParamSchema.shape.params,
     }),
@@ -56,6 +61,7 @@ router.use("/:id");
 
 router.put(
     "/trainers",
+    checkRole(Role.ADMIN),
     validateSchema({
         params: groupIdParamSchema.shape.params,
         body: updateGroupTrainersSchema.shape.body,
@@ -65,6 +71,7 @@ router.put(
 
 router.put(
     "/trainees",
+    checkRole(Role.ADMIN),
     validateSchema({
         params: groupIdParamSchema.shape.params,
         body: updateGroupTraineesSchema.shape.body,
@@ -76,6 +83,7 @@ router.use("/courses");
 
 router.post(
     "/",
+    checkRole(Role.ADMIN),
     validateSchema({
         params: groupIdParamSchema.shape.params,
     }),
@@ -84,6 +92,7 @@ router.post(
 
 router.get(
     "/",
+    authorizeGroup,
     validateSchema({
         params: groupIdParamSchema.shape.params,
     }),
@@ -92,6 +101,7 @@ router.get(
 
 router.delete(
     "/",
+    checkRole(Role.ADMIN),
     validateSchema({
         params: groupIdParamSchema.shape.params,
     }),

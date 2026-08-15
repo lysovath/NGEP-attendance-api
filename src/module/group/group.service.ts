@@ -187,6 +187,101 @@ class GroupService {
             throw ApiError.internal("Failed to update group trainees");
         }
     }
+
+    async createGroupCourse(groupId: number, courseId: number) {
+        try {
+            const groupCourse = await prisma.groupCourse.create({
+                data: {
+                    groupId: groupId,
+                    courseId: courseId,
+                },
+                select: {
+                    id: true,
+                    course: {
+                        select: {
+                            id: true,
+                            name: true,
+                        }
+                    }
+                }
+            });
+            return groupCourse;
+        } catch (error) {
+            throw ApiError.internal("Failed to create group course");
+        }
+    }
+
+    async getAllGroupCourses() {
+        try {
+            const groupCourses = await prisma.groupCourse.findMany({
+                select: {
+                    id: true,
+                    group: {
+                        select: {
+                            id: true,
+                            name: true,
+                        }
+                    },
+                    course: {
+                        select: {
+                            id: true,
+                            name: true,
+                        }
+                    }
+                }
+            });
+            return groupCourses;
+        } catch (error) {
+            throw ApiError.internal("Failed to retrieve group courses");
+        }
+    }
+
+    async getGroupCourseByGroupId(groupId: number) {
+        try {
+            const groupCourses = await prisma.groupCourse.findMany({
+                where: { groupId: groupId },
+                select: {
+                    id: true,
+                    group: {
+                        select: {
+                            id: true,
+                            name: true,
+                        }
+                    },
+                    course: {
+                        select: {
+                            id: true,
+                            name: true,
+                        }
+                    }
+                }
+            });
+            return groupCourses;
+        } catch (error) {
+            throw ApiError.internal("Failed to retrieve group courses by group ID");
+        }
+    }  
+
+    async deleteGroupCourse(groupId: number, courseId: number) {
+        try {
+            const existingGroupCourse = await prisma.groupCourse.findUnique({
+                where: { groupId_courseId: { groupId, courseId } },
+            });
+
+            if (!existingGroupCourse) {
+                throw ApiError.notFound("Group course not found");
+            }
+
+            await prisma.groupCourse.delete({
+                where: { groupId_courseId: { groupId, courseId } },
+            });
+        } catch (error) {
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw ApiError.internal("Failed to delete group course");
+        }
+    }
 }
 
 export default new GroupService();

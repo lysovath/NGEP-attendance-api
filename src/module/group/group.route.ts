@@ -72,4 +72,30 @@ router.put(
     GroupController.updateGroupTrainees,
 );
 
+router.use("/courses");
+
+router.post(
+    "/",
+    validateSchema({
+        params: groupIdParamSchema.shape.params,
+    }),
+    GroupController.addCourseToGroup,
+);
+
+router.get(
+    "/",
+    validateSchema({
+        params: groupIdParamSchema.shape.params,
+    }),
+    GroupController.getGroupCourses,
+);
+
+router.delete(
+    "/",
+    validateSchema({
+        params: groupIdParamSchema.shape.params,
+    }),
+    GroupController.removeCourseFromGroup,
+);
+
 export default router;

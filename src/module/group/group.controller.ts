@@ -97,6 +97,46 @@ class GroupController {
             next(error);
         }
     }
+
+    async addCourseToGroup(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const { courseId } = req.body;
+            const groupCourse = await groupService.createGroupCourse(Number(id), courseId);
+            return res.status(201).json({
+                success: true,
+                message: "Course added to group successfully",
+                data: groupCourse,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getGroupCourses(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const groupCourses = await groupService.getGroupCourseByGroupId(Number(id));
+            return res.status(200).json({
+                success: true,
+                message: "Group courses retrieved successfully",
+                data: groupCourses,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async removeCourseFromGroup(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const { courseId } = req.body;
+            await groupService.deleteGroupCourse(Number(id), Number(courseId));
+            return res.status(204).send();
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 export default new GroupController();

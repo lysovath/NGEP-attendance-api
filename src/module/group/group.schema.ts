@@ -36,3 +36,27 @@ export const updateGroupTraineesSchema = z.object({
     }),
 });
 
+export const addGroupCourseSchema = z.object({
+    params: z.object({
+        id: z.string().regex(/^\d+$/, "ID must be a number"),
+    }),
+    body: z.object({
+        courseId: z.number().int().positive("Course ID must be a positive integer"),
+    }),
+});
+
+export const deleteGroupCourseSchema = z.object({
+    params: z.object({
+        id: z.string().regex(/^\d+$/, "Group ID must be a number"),
+    }),
+    body: z.object({
+        courseId: z.number().int().positive("Course ID must be a positive integer"),
+    }),
+});
+
+export const getGroupCoursesSchema = z.object({
+    params: z.object({
+        id: z.string().regex(/^\d+$/, "Group ID must be a number"),
+    }),
+});
+

@@ -3,6 +3,7 @@ import { isAuthenticated, checkRole } from "../middleware/auth.js";
 import courseRouter from "../module/course/course.route.js";
 import userRouter from "../module/user/user.route.js";
 import groupRouter from "../module/group/group.route.js";
+import sessionRouter from "../module/session/session.route.js";
 
 const router = Router();
 
@@ -14,6 +15,7 @@ router.use("/groups", groupRouter);
 
 router.use(checkRole("ADMIN"));
 
+router.use("/sessions", sessionRouter);
 
 
 router.use("/courses", courseRouter);

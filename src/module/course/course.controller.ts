@@ -1,7 +1,5 @@
 import courseService from "./course.service.js";
 import type { Request, Response, NextFunction } from "express";
-import { ApiError } from "../../utils/ApiError.js";
-import { success } from "zod";
 
 class CourseController {
     async createCourse(req: Request, res: Response, next: NextFunction) {

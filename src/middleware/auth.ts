@@ -12,6 +12,7 @@ declare global {
 }
 
 
+
 export const isAuthenticated = async (
   req: Request,
   res: Response,
@@ -20,7 +21,7 @@ export const isAuthenticated = async (
   const auth = getAuth(req);
 
   if (!auth.userId) {
-    return res.status(401).json({ error: "Unauthorized: Missing authentication token" });
+    return res.status(401).json({ error: "Unauthorized: Missing token" });
   }
 
   try {
@@ -29,53 +30,43 @@ export const isAuthenticated = async (
       include: { group: true },
     });
 
-    if(user) {
-        const isInAllowedList = await prisma.allowedUser.findUnique({
-            where: { email: user.email },
-        });
-
-        if (!isInAllowedList) {
-            return res.status(403).json({ error: "Forbidden: User not in allowed list" });
-        }
-
-        req.dbUser = user;
-        return next();
-    }
-
     if (!user) {
       const clerkUser = await clerkClient.users.getUser(auth.userId);
       const primaryEmail = clerkUser.emailAddresses.find(
-        (email) => email.id === clerkUser.primaryEmailAddressId
+        (e) => e.id === clerkUser.primaryEmailAddressId
       )?.emailAddress;
 
       if (!primaryEmail) {
-        return res.status(400).json({ error: "User missing primary email address" });
+        return res.status(400).json({ error: "Bad Request: No primary email" });
       }
 
-      const isInAllowedList = await prisma.allowedUser.findUnique({
+      user = await prisma.user.findUnique({
         where: { email: primaryEmail },
+        include: { group: true },
       });
 
-      if (!isInAllowedList) {
-        return res.status(403).json({ error: "Forbidden: User not in allowed list" });
+      if (!user) {
+        return res.status(403).json({ error: "Forbidden: Account not pre-approved" });
       }
 
-      user = await prisma.user.create({
+      const fullName = `${clerkUser.firstName ?? ""} ${clerkUser.lastName ?? ""}`.trim();
+      user = await prisma.user.update({
+        where: { id: user.id },
         data: {
           clerkId: auth.userId,
-          email: primaryEmail,
-          firstName: clerkUser.firstName ?? "",
-          lastName: clerkUser.lastName ?? "",
-          groupId: isInAllowedList.groupId,
+          name: user.name ?? (fullName || null),
         },
         include: { group: true },
       });
     }
 
+    if (!user.isActive) {
+      return res.status(403).json({ error: "Forbidden: Account deactivated" });
+    }
+
     req.dbUser = user;
     return next();
   } catch (error) {
-    console.error("Auth middleware error:", error);
     return res.status(500).json({ error: "Internal server error during authentication" });
   }
 };

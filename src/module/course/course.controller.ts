@@ -1,13 +1,18 @@
 import courseService from "./course.service.js";
 import type { Request, Response, NextFunction } from "express";
 import { ApiError } from "../../utils/ApiError.js";
+import { success } from "zod";
 
 class CourseController {
     async createCourse(req: Request, res: Response, next: NextFunction) {
         try {
             const { name } = req.body;
             const course = await courseService.createCourse(name);
-            return res.status(201).json(course);
+            return res.status(201).json({
+                success: true,
+                message: "Course created successfully",
+                data: course,
+            });
         } catch (error) {
             next(error);
         }
@@ -16,7 +21,11 @@ class CourseController {
     async getAllCourses(req: Request, res: Response, next: NextFunction) {
         try {
             const courses = await courseService.getAllCourses();
-            return res.status(200).json(courses);
+            return res.status(200).json({
+                success: true,
+                message: "Courses retrieved successfully",
+                data: courses,
+            });
         } catch (error) {
             next(error);
         }
@@ -27,7 +36,11 @@ class CourseController {
             const { id } = req.params;
             const { name } = req.body;
             const course = await courseService.updateCourse(Number(id), name);
-            return res.status(200).json(course);
+            return res.status(200).json({
+                success: true,
+                message: "Course updated successfully",
+                data: course,
+            });
         } catch (error) {
             next(error);
         }

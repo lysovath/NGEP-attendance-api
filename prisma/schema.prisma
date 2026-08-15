@@ -22,31 +22,21 @@ enum AttendanceStatus {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  clerkId   String   @unique @map("clerk_id")
-  studentId String?  @unique @map("student_id")
-  name      String?
-  email     String   @unique
-  role      Role     @default(TRAINER)
-  groupId   Int?     @map("group_id")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id                 Int                 @id @default(autoincrement())
+  clerkId            String?             @unique @map("clerk_id")
+  studentId          String?             @unique @map("student_id")
+  name               String?
+  email              String              @unique
+  role               Role                @default(TRAINER)
+  groupId            Int?                @map("group_id")
+  isActive           Boolean             @default(true) @map("is_active")
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
 
   group              Group?              @relation(fields: [groupId], references: [id], onDelete: SetNull)
   trainerAttendances TrainerAttendance[]
 
   @@map("users")
-}
-
-model AllowedUser {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  groupId   Int      @map("group_id")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
-
-  @@map("allowed_users")
 }
 
 model Group {
@@ -56,7 +46,6 @@ model Group {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   users        User[]
-  allowedUsers AllowedUser[]
   trainees     Trainee[]
   groupCourses GroupCourse[]
 

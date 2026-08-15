@@ -24,6 +24,8 @@ enum AttendanceStatus {
 model User {
   id        Int      @id @default(autoincrement())
   clerkId   String   @unique @map("clerk_id")
+  studentId String?  @unique @map("student_id")
+  name      String?
   email     String   @unique
   role      Role     @default(TRAINER)
   groupId   Int?     @map("group_id")

@@ -8,3 +8,10 @@ export const authorizeGroup = (req: Request, res: Response, next: NextFunction) 
   }
   next();
 };
+
+export const authorizeGroupQuery = (req: Request, res: Response, next: NextFunction) => {
+  if (req.dbUser.role !== Role.ADMIN && req.dbUser.groupId !== Number(req.query.groupId)) {
+    throw ApiError.forbidden("You do not have access to this group");
+  }
+  next();
+}

@@ -106,6 +106,16 @@ class GroupService {
                             name: true,
                             studentId: true,
                         }
+                    },
+                    groupCourses: {
+                        select: {
+                            course: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                }
+                            }
+                        }
                     }
                 }
             });
@@ -117,6 +127,7 @@ class GroupService {
                 name: group.name,
                 trainers: group.users,
                 trainees: group.trainees,
+                courses: group.groupCourses.map(gc => gc.course),
             };
         } catch (error) {
             if( error instanceof ApiError) {
@@ -165,7 +176,8 @@ class GroupService {
 
             if(!existingGroup) {
                 throw ApiError.notFound("Group not found");
-            }
+            }   
+            console.log(`Updating group ${groupId} with trainees:`, traineeIds);
 
             const updatedGroup = await prisma.$transaction([
                 prisma.trainee.updateMany({
@@ -207,6 +219,10 @@ class GroupService {
             });
             return groupCourse;
         } catch (error) {
+            console.error("Error creating group course:", error);
+            if (error instanceof ApiError) {
+                throw error;
+            }
             throw ApiError.internal("Failed to create group course");
         }
     }
@@ -275,7 +291,9 @@ class GroupService {
             await prisma.groupCourse.delete({
                 where: { groupId_courseId: { groupId, courseId } },
             });
+
         } catch (error) {
+            console.error("Error deleting group course:", error);
             if (error instanceof ApiError) {
                 throw error;
             }

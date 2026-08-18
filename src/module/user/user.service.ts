@@ -2,6 +2,7 @@ import { prisma } from "../../lib/prisma.js";
 import ApiError from "../../utils/ApiError.js";
 import { Role } from "@prisma/client";
 import removeUndefined from "../../utils/removeUndefined.js";
+import { Prisma } from "@prisma/client";
 
 interface CreateUserInput {
     email: string;
@@ -14,6 +15,7 @@ class UserService {
 
     async createUser(input: CreateUserInput) {
         try {
+
             const user = await prisma.user.create({
                 data: {
                     email: input.email,
@@ -24,14 +26,25 @@ class UserService {
             });
             return user;
         } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+                const target = (error.meta?.target as string[]) ?? [];
+                if (target.includes("studentId")) {
+                  throw ApiError.conflict("User with this student ID already exists");
+                }
+                throw ApiError.conflict("User with this email already exists");
+            }
             throw ApiError.internal("Failed to create user");
         }
     }
 
-    async getUser(role?: Role){
+    async getUser(role?: Role, groupId?: number) {
+        const whereClause = removeUndefined({
+            role: role ? role : {},
+            groupId: groupId ? groupId : {},
+        });
         try {
             const users = await prisma.user.findMany({
-                where: role ? { role: role } : {},
+                where: whereClause,
                 select: {
                     id: true,
                     email: true,

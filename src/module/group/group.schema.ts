@@ -7,6 +7,9 @@ export const createGroupSchema = z.object({
 });
 
 export const updateGroupSchema = z.object({
+    params: z.object({
+        id: z.string().regex(/^\d+$/, "ID must be a number"),
+    }),
     body: z.object({
         name: z.string().min(1, "Group name is required").optional(),
     }),
@@ -23,7 +26,7 @@ export const updateGroupTrainersSchema = z.object({
         id: z.string().regex(/^\d+$/, "ID must be a number"),
     }),
     body: z.object({
-        trainerIds: z.array(z.number().int().positive()).min(1, "At least one trainer ID is required"),
+        trainerIds: z.array(z.number().int().positive()).min(0),
     }),
 });
 
@@ -32,7 +35,7 @@ export const updateGroupTraineesSchema = z.object({
         id: z.string().regex(/^\d+$/, "ID must be a number"),
     }),
     body: z.object({
-        traineeIds: z.array(z.number().int().positive()).min(1, "At least one trainee ID is required"),
+        traineeIds: z.array(z.number().int().positive()).min(0),
     }),
 });
 

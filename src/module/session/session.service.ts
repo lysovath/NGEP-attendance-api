@@ -38,7 +38,7 @@ class SessionService {
         }
     }
 
-    async getAllSessionsByGroupCourseId(groupId: number, courseId: number) {
+    async getAllSessions(groupId: number, courseId: number) {
         try {
             const groupCourse = await prisma.groupCourse.findUnique({
                 where: {
@@ -69,6 +69,9 @@ class SessionService {
             });
             return sessions;
         } catch (error) {
+            if(error instanceof ApiError){
+                throw error;
+            }
             throw ApiError.internal("Failed to retrieve sessions");
         }
     }

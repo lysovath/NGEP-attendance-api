@@ -10,6 +10,7 @@ import {
   groupIdParamSchema,
   updateGroupTrainersSchema,
   updateGroupTraineesSchema,
+  deleteGroupCourseSchema
 } from "./group.schema.js";
 import { checkRole } from "../../middleware/auth.js";
 
@@ -57,10 +58,9 @@ router.delete(
 );
 
 
-router.use("/:id");
 
 router.put(
-    "/trainers",
+    "/:id/trainers",
     checkRole(Role.ADMIN),
     validateSchema({
         params: groupIdParamSchema.shape.params,
@@ -70,7 +70,7 @@ router.put(
 );
 
 router.put(
-    "/trainees",
+    "/:id/trainees",
     checkRole(Role.ADMIN),
     validateSchema({
         params: groupIdParamSchema.shape.params,
@@ -79,10 +79,10 @@ router.put(
     GroupController.updateGroupTrainees,
 );
 
-router.use("/courses");
+
 
 router.post(
-    "/",
+    "/:id/courses",
     checkRole(Role.ADMIN),
     validateSchema({
         params: groupIdParamSchema.shape.params,
@@ -91,7 +91,7 @@ router.post(
 );
 
 router.get(
-    "/",
+    "/:id",
     authorizeGroup,
     validateSchema({
         params: groupIdParamSchema.shape.params,
@@ -100,10 +100,11 @@ router.get(
 );
 
 router.delete(
-    "/",
+    "/:id/courses",
     checkRole(Role.ADMIN),
     validateSchema({
-        params: groupIdParamSchema.shape.params,
+        params: deleteGroupCourseSchema.shape.params,
+        body: deleteGroupCourseSchema.shape.body,
     }),
     GroupController.removeCourseFromGroup,
 );

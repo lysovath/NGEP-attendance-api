@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const createTrainerAttendanceSchema = z.object({
     params: z.object({
-        id: z.string().regex(/^\d+$/, "ID must be a number"),
+        sessionId: z.string().regex(/^\d+$/, "ID must be a number"),
     }),
     body: z.object({
         trainerId: z.number().int().positive("Trainer ID must be a positive integer"),
@@ -14,13 +14,13 @@ export const createTrainerAttendanceSchema = z.object({
 
 export const getTrainerBySessionIdSchema = z.object({
     params: z.object({
-        id: z.string().regex(/^\d+$/, "ID must be a number"),
+        sessionId: z.string().regex(/^\d+$/, "ID must be a number"),
     }),
 });
 
 export const batchCreateTrainerAttendanceSchema = z.object({
     params: z.object({
-        id: z.string().regex(/^\d+$/, "ID must be a number"),
+        sessionId: z.string().regex(/^\d+$/, "ID must be a number"),
     }),
     body: z.array(z.object({
         trainerId: z.number().int().positive("Trainer ID must be a positive integer"),
@@ -33,7 +33,7 @@ export const batchCreateTrainerAttendanceSchema = z.object({
 export const updateTrainerAttendanceSchema = z.object({
     params: z.object({
         sessionId: z.string().regex(/^\d+$/, "Session ID must be a number"),
-        trainerId: z.string().regex(/^\d+$/, "Trainer ID must be a number"),
+        id: z.string().regex(/^\d+$/, "Trainer ID must be a number"),
     }),
     body: z.object({
         status: z.enum(["PRESENT", "ABSENT", "LATE", "EXCUSED"], {

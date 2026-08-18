@@ -4,6 +4,14 @@ class CourseService {
 
     async createCourse(name: string){
         try {
+            const existingCourse = await prisma.course.findUnique({
+                where: { name: name },
+            });
+
+            if (existingCourse) {
+                throw ApiError.conflict("Course with this name already exists");
+            }
+
             const course = await prisma.course.create({
                 data: {
                     name: name,
@@ -15,6 +23,9 @@ class CourseService {
             });
             return course;
         } catch (error) {
+            if( error instanceof ApiError) {
+                throw error;
+            }
             throw ApiError.internal("Failed to create course");
         }
     }

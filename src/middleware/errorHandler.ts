@@ -10,12 +10,12 @@ export const errorHandler: ErrorRequestHandler = (
   _next: NextFunction
 ) => {
   if (err instanceof ApiError) {
-    return res.status(err.statusCode).json({ error: err.message });
+    return res.status(err.statusCode).json({ message: err.message });
   }
 
   if (err instanceof z.ZodError) {
     return res.status(400).json({
-      error: "Validation Error",
+      message: "Validation Error",
       details: err.issues.map((issue) => ({
         field: issue.path.join("."),
         message: issue.message,

@@ -19,8 +19,8 @@ class UserController {
 
     async getUser(req: Request, res: Response, next: NextFunction) {
         try {
-            const { role } = req.query;
-            const users = await userService.getUser(role as any);
+            const { role, groupId } = req.query;
+            const users = await userService.getUser(role as any, Number(groupId));
             return res.status(200).json({
                 success: true,
                 message: "Users retrieved successfully",

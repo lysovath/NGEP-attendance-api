@@ -37,7 +37,7 @@ router.get(
 );
 
 router.put(
-    "/:trainerId",
+    "/:id",
     validateSchema({
         params: updateTrainerAttendanceSchema.shape.params,
         body: updateTrainerAttendanceSchema.shape.body,

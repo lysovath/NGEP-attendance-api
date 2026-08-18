@@ -28,6 +28,8 @@ class TraineeService {
                     id: true,
                     email: true,
                     groupId: true,
+                    name: true,
+                    studentId: true,
                 }
             });
             return trainee;
@@ -48,7 +50,6 @@ class TraineeService {
                     email: true,
                     name: true,
                     studentId: true,
-                    groupId: true,
                 }
             });
             return trainees;

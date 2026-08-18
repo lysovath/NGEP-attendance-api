@@ -28,34 +28,93 @@ class TrainerAttendanceService {
         }
     }
 
-    async batchCreateTrainerAttendance(sessionId: number, attendanceData: TrainerAttendanceData[]){
+    async batchCreateTrainerAttendance(sessionId: number, attendanceData: TrainerAttendanceData[]) {
         try {
-            const trainerAttendances = await prisma.trainerAttendance.createMany({
-                data: attendanceData.map(data => ({
+            if (!attendanceData || attendanceData.length === 0) {
+                return this.getTrainerAttendances(sessionId);
+            }
+        
+            const createQuery = prisma.trainerAttendance.createMany({
+                data: attendanceData.map((data) => ({
+                    sessionId,
                     trainerId: data.trainerId,
-                    sessionId: sessionId,
                     status: data.status,
                 })),
                 skipDuplicates: true,
             });
-            return trainerAttendances;
+        
+            const statusGroups = attendanceData.reduce((acc, data) => {
+                if (!acc[data.status]) {
+                    acc[data.status] = [];
+                }
+                acc[data.status].push(data.trainerId);
+                return acc;
+            }, {} as Record<AttendanceStatus, number[]>);
+        
+            const updateQueries = Object.entries(statusGroups).map(([status, trainerIds]) =>
+                prisma.trainerAttendance.updateMany({
+                    where: {
+                        sessionId: sessionId,
+                        trainerId: { in: trainerIds },
+                    },
+                    data: {
+                        status: status as AttendanceStatus,
+                    },
+                })
+            );
+        
+            await prisma.$transaction([createQuery, ...updateQueries]);
+        
+            return this.getTrainerAttendances(sessionId);
         } catch (error) {
-            throw ApiError.internal("Failed to create trainer attendances");
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw ApiError.internal("Failed to batch create trainer attendance");
         }
     }
 
-    async getTrainerAttendanceBySessionId(sessionId: number) {
+    async getTrainerAttendances(sessionId: number) {
         try {
-            const trainerAttendances = await prisma.trainerAttendance.findMany({
-                where: { sessionId: sessionId },
+            const session = await prisma.session.findUnique({
+                where: { id: sessionId },
+                select: { groupCourse: { select: { groupId: true } } }
+            });
+
+            if (!session || !session.groupCourse) {
+                throw ApiError.notFound("Session not found");
+            }
+
+            const trainerAttendances = await prisma.user.findMany({
+                where: {
+                    role: Role.TRAINER,
+                    groupId: session.groupCourse.groupId,
+                },
                 select: {
                     id: true,
-                    trainerId: true,
-                    sessionId: true,
-                    status: true,
+                    email: true,
+                    name: true,
+                    studentId: true,
+                    trainerAttendances: {
+                        where: { sessionId: sessionId },
+                        select: {
+                            status: true,
+                            updatedAt: true,
+                        }
+                    }
                 }
             });
-            return trainerAttendances;
+
+            return {
+                trainers: trainerAttendances.map(trainer => ({
+                    id: trainer.id,
+                    email: trainer.email,
+                    name: trainer.name,
+                    studentId: trainer.studentId,
+                    status: trainer.trainerAttendances[0]?.status ?? 'UNMARKED',
+                    markedAt: trainer.trainerAttendances[0]?.updatedAt ?? null,
+                }))
+            };
         } catch (error) {
             throw ApiError.internal("Failed to retrieve trainer attendances");
         }

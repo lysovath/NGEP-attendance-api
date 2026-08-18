@@ -5,10 +5,11 @@ import userRouter from "../module/user/user.route.js";
 import groupRouter from "../module/group/group.route.js";
 import sessionRouter from "../module/session/session.route.js";
 import traineeRouter from "../module/trainee/trainee.route.js";
+import authRouter from "../module/auth/auth.route.js";
 
 const router = Router();
 
-
+router.use("/auth", authRouter);
 
 router.use(isAuthenticated);
 

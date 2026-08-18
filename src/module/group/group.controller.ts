@@ -86,8 +86,8 @@ class GroupController {
     async updateGroupTrainees(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
-            const { studentIds } = req.body;
-            const group = await groupService.updateGroupTrainees(Number(id), studentIds);
+            const { traineeIds } = req.body;
+            const group = await groupService.updateGroupTrainees(Number(id), traineeIds);
             return res.status(200).json({
                 success: true,
                 message: "Group students updated successfully",
@@ -102,7 +102,7 @@ class GroupController {
         try {
             const { id } = req.params;
             const { courseId } = req.body;
-            const groupCourse = await groupService.createGroupCourse(Number(id), courseId);
+            const groupCourse = await groupService.createGroupCourse(Number(id), Number(courseId));
             return res.status(201).json({
                 success: true,
                 message: "Course added to group successfully",
@@ -134,6 +134,7 @@ class GroupController {
             await groupService.deleteGroupCourse(Number(id), Number(courseId));
             return res.status(204).send();
         } catch (error) {
+            console.error("Error in removeCourseFromGroup:", error);
             next(error);
         }
     }

@@ -20,10 +20,10 @@ class SessionController {
         }
     }
 
-    async getAllSessionsByGroupCourseId(req: Request, res: Response, next: NextFunction) {
+    async getAllSessions(req: Request, res: Response, next: NextFunction) {
         try {
-            const { groupId, courseId } = req.body;
-            const sessions = await sessionService.getAllSessionsByGroupCourseId(Number(groupId), Number(courseId));
+            const { groupId, courseId } = req.query;
+            const sessions = await sessionService.getAllSessions(Number(groupId), Number(courseId));
             return res.status(200).json({
                 success: true,
                 message: "Sessions retrieved successfully",
@@ -36,8 +36,8 @@ class SessionController {
 
     async getSessionById(req: Request, res: Response, next: NextFunction) {
         try {
-            const { id } = req.params;
-            const session = await sessionService.getSessionById(Number(id));
+            const { sessionId } = req.params;
+            const session = await sessionService.getSessionById(Number(sessionId));
             return res.status(200).json({
                 success: true,
                 message: "Session retrieved successfully",
@@ -50,9 +50,9 @@ class SessionController {
 
     async updateSession(req: Request, res: Response, next: NextFunction) {
         try {
-            const { id } = req.params;
+            const { sessionId } = req.params;
             const { name, startTime, endTime } = req.body;
-            const session = await sessionService.updateSession(Number(id), {
+            const session = await sessionService.updateSession(Number(sessionId), {
                 name,
                 startTime: new Date(startTime),
                 endTime: new Date(endTime),
@@ -69,8 +69,8 @@ class SessionController {
 
     async deleteSession(req: Request, res: Response, next: NextFunction) {
         try {
-            const { id } = req.params;
-            await sessionService.deleteSession(Number(id));
+            const { sessionId } = req.params;
+            await sessionService.deleteSession(Number(sessionId));
             return res.status(204).send();
         } catch (error) {
             next(error);

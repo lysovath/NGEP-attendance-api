@@ -21,6 +21,11 @@ enum AttendanceStatus {
   EXCUSED
 }
 
+enum SessionType {
+  THEORY
+  LAB
+}
+
 model User {
   id                 Int                 @id @default(autoincrement())
   clerkId            String?             @unique @map("clerk_id")
@@ -45,26 +50,45 @@ model Group {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  users        User[]
-  trainees     Trainee[]
-  groupCourses GroupCourse[]
+  users          User[]
+  trainees       Trainee[]
+  groupCourses   GroupCourse[]
+  groupOverrides GroupOverride[]
 
   @@map("groups")
 }
 
 model Trainee {
   id        Int      @id @default(autoincrement())
-  studentId String   @unique @map("student_id")
+  studentId String?  @unique @map("student_id")
   name      String
   email     String   @unique
-  groupId   Int?      @map("group_id")
+  groupId   Int?     @map("group_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  group              Group?               @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  group              Group?              @relation(fields: [groupId], references: [id], onDelete: SetNull)
   traineeAttendances TraineeAttendance[]
+  groupOverrides     GroupOverride[]
 
   @@map("trainees")
+}
+
+model GroupOverride {
+  id        Int      @id @default(autoincrement())
+  traineeId Int      @map("trainee_id")
+  groupId   Int      @map("group_id")
+  date      DateTime @db.Date
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  trainee Trainee @relation(fields: [traineeId], references: [id], onDelete: Cascade)
+  group   Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([traineeId, date])
+  @@index([date])
+  @@index([groupId, date])
+  @@map("group_overrides")
 }
 
 model Course {
@@ -94,18 +118,20 @@ model GroupCourse {
 }
 
 model Session {
-  id            Int      @id @default(autoincrement())
-  groupCourseId Int      @map("group_course_id")
+  id            Int         @id @default(autoincrement())
+  groupCourseId Int         @map("group_course_id")
   name          String
-  startTime     DateTime @map("start_time")
-  endTime       DateTime @map("end_time")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  type          SessionType @default(THEORY)
+  startTime     DateTime    @map("start_time")
+  endTime       DateTime    @map("end_time")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
 
   groupCourse        GroupCourse         @relation(fields: [groupCourseId], references: [id], onDelete: Cascade)
   traineeAttendances TraineeAttendance[]
   trainerAttendances TrainerAttendance[]
 
+  @@index([startTime])
   @@map("sessions")
 }
 

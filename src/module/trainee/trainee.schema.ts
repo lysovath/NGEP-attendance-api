@@ -4,7 +4,19 @@ export const createTraineeSchema = z.object({
     body: z.object({
         name: z.string().min(1, "Trainee name is required"),
         email: z.string().email("Invalid email format"),
-        studentId: z.string().min(1, "Student ID is required"),
+        studentId: z.string().min(1, "Student ID is required").optional(),
+        groupId: z.number().int().positive().optional(),
+    }),
+});
+
+export const importTraineesSchema = z.object({
+    body: z.object({
+        groupId: z.number().int().positive().optional(),
+        trainees: z.array(z.object({
+            name: z.string().min(1, "Trainee name is required"),
+            email: z.string().email("Invalid email format"),
+            studentId: z.string().optional(),
+        })).min(1, "At least one trainee is required"),
     }),
 });
 

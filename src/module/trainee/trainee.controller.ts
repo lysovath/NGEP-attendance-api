@@ -19,11 +19,33 @@ class TraineeController {
     async createTrainee(req: Request, res: Response, next: NextFunction) {
         try {
             const { email, name, studentId, groupId } = req.body;
-            const trainee = await traineeService.createTrainee({ email, name, studentId });
+            const trainee = await traineeService.createTrainee({
+                email,
+                name,
+                studentId,
+                ...(groupId !== undefined && groupId !== null ? { groupId: Number(groupId) } : {}),
+            });
             return res.status(201).json({
                 success: true,
                 message: "Trainee created successfully",
                 data: trainee,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async importTrainees(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { groupId, trainees } = req.body;
+            const result = await traineeService.importTrainees(
+                Array.isArray(trainees) ? trainees : [],
+                groupId !== undefined && groupId !== null ? Number(groupId) : undefined
+            );
+            return res.status(200).json({
+                success: true,
+                message: "Trainees imported successfully",
+                data: result,
             });
         } catch (error) {
             next(error);

@@ -10,7 +10,8 @@ import {
   groupIdParamSchema,
   updateGroupTrainersSchema,
   updateGroupTraineesSchema,
-  deleteGroupCourseSchema
+  deleteGroupCourseSchema,
+  addGroupCourseSchema
 } from "./group.schema.js";
 import { checkRole } from "../../middleware/auth.js";
 
@@ -85,13 +86,14 @@ router.post(
     "/:id/courses",
     checkRole(Role.ADMIN),
     validateSchema({
-        params: groupIdParamSchema.shape.params,
+        params: addGroupCourseSchema.shape.params,
+        body: addGroupCourseSchema.shape.body,
     }),
     GroupController.addCourseToGroup,
 );
 
 router.get(
-    "/:id",
+    "/:id/courses",
     authorizeGroup,
     validateSchema({
         params: groupIdParamSchema.shape.params,

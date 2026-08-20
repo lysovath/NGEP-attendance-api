@@ -134,7 +134,6 @@ class GroupController {
             await groupService.deleteGroupCourse(Number(id), Number(courseId));
             return res.status(204).send();
         } catch (error) {
-            console.error("Error in removeCourseFromGroup:", error);
             next(error);
         }
     }

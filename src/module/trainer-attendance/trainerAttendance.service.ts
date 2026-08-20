@@ -33,17 +33,51 @@ class TrainerAttendanceService {
             if (!attendanceData || attendanceData.length === 0) {
                 return this.getTrainerAttendances(sessionId);
             }
-        
+
+            const session = await prisma.session.findUnique({
+                where: { id: sessionId },
+                select: { groupCourse: { select: { groupId: true } } }
+            });
+
+            if (!session || !session.groupCourse) {
+                throw ApiError.notFound("Session not found");
+            }
+
+            const deduped = new Map<number, AttendanceStatus>();
+            for (const record of attendanceData) {
+                deduped.set(record.trainerId, record.status);
+            }
+            const records = Array.from(deduped.entries()).map(([trainerId, status]) => ({
+                trainerId,
+                status,
+            }));
+
+            const groupTrainers = await prisma.user.findMany({
+                where: { role: Role.TRAINER, groupId: session.groupCourse.groupId },
+                select: { id: true },
+            });
+            const trainerIds = new Set(groupTrainers.map((t) => t.id));
+
+            const invalidIds = records
+                .map((r) => r.trainerId)
+                .filter((id) => !trainerIds.has(id));
+
+            if (invalidIds.length > 0) {
+                throw ApiError.badRequest(
+                    `Trainer(s) ${invalidIds.join(", ")} are not part of this group`
+                );
+            }
+
             const createQuery = prisma.trainerAttendance.createMany({
-                data: attendanceData.map((data) => ({
+                data: records.map((data) => ({
                     sessionId,
                     trainerId: data.trainerId,
                     status: data.status,
                 })),
                 skipDuplicates: true,
             });
-        
-            const statusGroups = attendanceData.reduce((acc, data) => {
+
+            const statusGroups = records.reduce((acc, data) => {
                 if (!acc[data.status]) {
                     acc[data.status] = [];
                 }
@@ -116,29 +150,9 @@ class TrainerAttendanceService {
                 }))
             };
         } catch (error) {
-            throw ApiError.internal("Failed to retrieve trainer attendances");
-        }
-    }
-
-    async getTrainerAttendanceByTrainerId(trainerId: number) {
-        try {
-            const trainerAttendances = await prisma.trainerAttendance.findMany({
-                where: { trainerId: trainerId },
-                select: {
-                    id: true,
-                    session: {
-                        select: {
-                            id: true,
-                            name: true,
-                            startTime: true,
-                            endTime: true,
-                        },
-                    status: true,
-                    }
-                }
-            });
-            return trainerAttendances;
-        } catch (error) {
+            if (error instanceof ApiError) {
+                throw error;
+            }
             throw ApiError.internal("Failed to retrieve trainer attendances");
         }
     }
@@ -164,6 +178,14 @@ class TrainerAttendanceService {
             });
             return trainerAttendance;
         } catch (error) {
+            if (
+                error &&
+                typeof error === "object" &&
+                "code" in error &&
+                (error as { code?: string }).code === "P2025"
+            ) {
+                throw ApiError.notFound("Trainer attendance not found");
+            }
             throw ApiError.internal("Failed to update trainer attendance");
         }
     }

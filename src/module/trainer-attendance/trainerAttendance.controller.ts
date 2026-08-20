@@ -21,13 +21,10 @@ class TrainerAttendanceController {
     async batchCreateTrainerAttendance(req: Request, res: Response, next: NextFunction) {
         try {
             const { sessionId } = req.params;
-            console.log(`Received batch create request for session ${sessionId} with data:`, req.body);
             const attendanceData = req.body.map((data: { trainerId: number; status: string }) => ({
                 trainerId: Number(data.trainerId),
                 status: data.status,
             }));
-
-            console.log(`Processed attendance data for session ${sessionId}:`, attendanceData);
 
             const trainerAttendances = await trainerAttendanceService.batchCreateTrainerAttendance(Number(sessionId), attendanceData);
             return res.status(201).json({
@@ -44,20 +41,6 @@ class TrainerAttendanceController {
         try {
             const { sessionId } = req.params;
             const trainerAttendances = await trainerAttendanceService.getTrainerAttendances(Number(sessionId));
-            return res.status(200).json({
-                success: true,
-                message: "Trainer attendances retrieved successfully",
-                data: trainerAttendances,
-            });
-        } catch (error) {
-            next(error);
-        }
-    }
-
-    async getTrainerAttendanceByTrainerId(req: Request, res: Response, next: NextFunction) {
-        try {
-            const { id } = req.params;
-            const trainerAttendances = await trainerAttendanceService.getTrainerAttendanceByTrainerId(Number(id));
             return res.status(200).json({
                 success: true,
                 message: "Trainer attendances retrieved successfully",

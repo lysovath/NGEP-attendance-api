@@ -4,9 +4,10 @@ import sessionService from "./session.service.js";
 class SessionController {
     async createSession(req: Request, res: Response, next: NextFunction) {
         try {
-            const { groupId, courseId, name, startTime, endTime } = req.body;
+            const { groupId, courseId, name, type, startTime, endTime } = req.body;
             const session = await sessionService.createSession(Number(groupId), Number(courseId), {
                 name,
+                type,
                 startTime: new Date(startTime),
                 endTime: new Date(endTime),
             });
@@ -51,11 +52,12 @@ class SessionController {
     async updateSession(req: Request, res: Response, next: NextFunction) {
         try {
             const { sessionId } = req.params;
-            const { name, startTime, endTime } = req.body;
+            const { name, type, startTime, endTime } = req.body;
             const session = await sessionService.updateSession(Number(sessionId), {
-                name,
-                startTime: new Date(startTime),
-                endTime: new Date(endTime),
+                ...(name !== undefined ? { name } : {}),
+                ...(type !== undefined ? { type } : {}),
+                ...(startTime ? { startTime: new Date(startTime) } : {}),
+                ...(endTime ? { endTime: new Date(endTime) } : {}),
             });
             return res.status(200).json({
                 success: true,

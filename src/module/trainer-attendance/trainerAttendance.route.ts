@@ -1,6 +1,9 @@
 import trainerAttendanceController from "./trainerAttendance.controller.js";
 import { Router } from "express";
 import validateSchema from "../../middleware/validateSchema.js";
+import { checkRole } from "../../middleware/auth.js";
+import { Role } from "@prisma/client";
+import { authorizeSession } from "../../middleware/authorizeSession.js";
 import {
     createTrainerAttendanceSchema,
     getTrainerBySessionIdSchema,
@@ -9,6 +12,8 @@ import {
 } from "./trainerAttendance.schema.js";
 
 const router = Router({ mergeParams: true });
+
+router.use(checkRole(Role.ADMIN), authorizeSession);
 
 router.post(
     "/",

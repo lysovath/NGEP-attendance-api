@@ -5,7 +5,8 @@ import {
     createTraineeSchema,
     updateTraineeSchema,
     traineeIdParamSchema,
-    getTraineeSchema
+    getTraineeSchema,
+    importTraineesSchema
 } from "./trainee.schema.js";
 import { checkRole } from "../../middleware/auth.js";
 import { Role } from "@prisma/client";
@@ -30,6 +31,14 @@ router.post(
         body: createTraineeSchema.shape.body,
     }),
     traineeController.createTrainee,
+);
+
+router.post(
+    "/import",
+    validateSchema({
+        body: importTraineesSchema.shape.body,
+    }),
+    traineeController.importTrainees,
 );
 
 router.put(

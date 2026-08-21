@@ -149,12 +149,12 @@ class GroupService {
 
             const updatedGroup = await prisma.$transaction([
                 prisma.user.updateMany({
-                    where: {groupId, id: { notIn: userIds}},
+                    where: {groupId, role: Role.TRAINER, id: { notIn: userIds}},
                     data: { groupId: null }
                 }),
 
                 prisma.user.updateMany({
-                    where: { id: { in: userIds }},
+                    where: { id: { in: userIds }, role: Role.TRAINER },
                     data: { groupId }
                 })
             ])
@@ -176,8 +176,7 @@ class GroupService {
 
             if(!existingGroup) {
                 throw ApiError.notFound("Group not found");
-            }   
-            console.log(`Updating group ${groupId} with trainees:`, traineeIds);
+            }
 
             const updatedGroup = await prisma.$transaction([
                 prisma.trainee.updateMany({
@@ -219,7 +218,6 @@ class GroupService {
             });
             return groupCourse;
         } catch (error) {
-            console.error("Error creating group course:", error);
             if (error instanceof ApiError) {
                 throw error;
             }
@@ -293,7 +291,6 @@ class GroupService {
             });
 
         } catch (error) {
-            console.error("Error deleting group course:", error);
             if (error instanceof ApiError) {
                 throw error;
             }

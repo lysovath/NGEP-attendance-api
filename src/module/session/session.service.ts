@@ -1,9 +1,11 @@
 import ApiError from "../../utils/ApiError.js";
 import { prisma } from "../../lib/prisma.js";
 import removeUndefined from "../../utils/removeUndefined.js";
+import { SessionType } from "@prisma/client";
 
 interface SessionData {
     name: string;
+    type?: SessionType;
     startTime: Date;
     endTime: Date;
 }
@@ -14,6 +16,7 @@ class SessionService {
             const session = await prisma.session.create({
                 data: {
                     name: sessionData.name,
+                    type: sessionData.type ?? SessionType.THEORY,
                     startTime: sessionData.startTime,
                     endTime: sessionData.endTime,
                     groupCourse: {
@@ -29,7 +32,8 @@ class SessionService {
                     id: true,
                     startTime: true,
                     endTime: true,
-                    name: true
+                    name: true,
+                    type: true,
                 },
             });
             return session;
@@ -63,9 +67,11 @@ class SessionService {
                 select: {
                     id: true,
                     name: true,
+                    type: true,
                     startTime: true,
                     endTime: true,
                 },
+                orderBy: { startTime: "asc" },
             });
             return sessions;
         } catch (error) {
@@ -83,6 +89,7 @@ class SessionService {
                 select: {
                     id: true,
                     name: true,
+                    type: true,
                     startTime: true,
                     endTime: true,
                 },
@@ -115,12 +122,14 @@ class SessionService {
                 where: { id: sessionId },
                 data: removeUndefined({
                     name: sessionData.name,
+                    type: sessionData.type,
                     startTime: sessionData.startTime,
                     endTime: sessionData.endTime,
                 }),
                 select: {
                     id: true,
                     name: true,
+                    type: true,
                     startTime: true,
                     endTime: true,
                 },

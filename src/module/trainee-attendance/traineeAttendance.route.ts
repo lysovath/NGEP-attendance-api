@@ -28,4 +28,22 @@ router.post(
     traineeAttendanceController.batchCreateTraineeAttendance,
 );
 
+router.post(
+    "/import",
+    validateSchema({
+        params: getTraineeBySessionIdSchema.shape.params,
+    }),
+    authorizeSession,
+    traineeAttendanceController.importTraineeAttendance,
+);
+
+router.get(
+    "/export",
+    validateSchema({
+        params: getTraineeBySessionIdSchema.shape.params,
+    }),
+    authorizeSession,
+    traineeAttendanceController.exportRoster,
+);
+
 export default router;

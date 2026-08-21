@@ -6,7 +6,14 @@ import { removeUndefined } from "../../utils/removeUndefined.js";
 interface TraineeData {
     email: string;
     name: string;
-    studentId: string;
+    studentId?: string;
+    groupId?: number;
+}
+
+interface TraineeImportRow {
+    name: string;
+    email: string;
+    studentId?: string;
 }
 
 class TraineeService {
@@ -22,7 +29,8 @@ class TraineeService {
                 data: {
                     email: TraineeData.email,
                     name: TraineeData.name,
-                    studentId: TraineeData.studentId,
+                    studentId: TraineeData.studentId ?? null,
+                    groupId: TraineeData.groupId ?? null,
                 },
                 select: {
                     id: true,
@@ -38,6 +46,59 @@ class TraineeService {
                 throw error;
             }
             throw ApiError.internal("Failed to create trainee");
+        }
+    }
+
+    async importTrainees(rows: TraineeImportRow[], groupId?: number) {
+        try {
+            if (!rows || rows.length === 0) {
+                throw ApiError.badRequest("No trainees to import");
+            }
+
+            const cleaned = rows
+                .map((r) => ({
+                    name: String(r.name ?? "").trim(),
+                    email: String(r.email ?? "").trim().toLowerCase(),
+                    studentId: r.studentId ? String(r.studentId).trim() : null,
+                }))
+                .filter((r) => r.name && r.email);
+
+            const emails = cleaned.map((r) => r.email);
+            const existing = await prisma.trainee.findMany({
+                where: { email: { in: emails } },
+                select: { email: true },
+            });
+            const existingEmails = new Set(existing.map((e) => e.email.toLowerCase()));
+
+            const seen = new Set<string>();
+            const toCreate = cleaned.filter((r) => {
+                if (existingEmails.has(r.email) || seen.has(r.email)) return false;
+                seen.add(r.email);
+                return true;
+            });
+
+            if (toCreate.length > 0) {
+                await prisma.trainee.createMany({
+                    data: toCreate.map((r) => ({
+                        name: r.name,
+                        email: r.email,
+                        studentId: r.studentId,
+                        groupId: groupId ?? null,
+                    })),
+                    skipDuplicates: true,
+                });
+            }
+
+            return {
+                created: toCreate.length,
+                skipped: cleaned.length - toCreate.length,
+                total: rows.length,
+            };
+        } catch (error) {
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw ApiError.internal("Failed to import trainees");
         }
     }
 

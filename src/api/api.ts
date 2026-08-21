@@ -6,6 +6,9 @@ import groupRouter from "../module/group/group.route.js";
 import sessionRouter from "../module/session/session.route.js";
 import traineeRouter from "../module/trainee/trainee.route.js";
 import authRouter from "../module/auth/auth.route.js";
+import enrollmentRouter from "../module/enrollment/enrollment.route.js";
+import reportRouter from "../module/report/report.route.js";
+import dashboardRouter from "../module/dashboard/dashboard.route.js";
 
 const router = Router();
 
@@ -26,6 +29,12 @@ router.use("/groups", groupRouter);
 router.use("/sessions", sessionRouter);
 
 router.use("/trainees", traineeRouter);
+
+router.use("/enrollments", enrollmentRouter);
+
+router.use("/reports", reportRouter);
+
+router.use("/dashboard", dashboardRouter);
 
 router.use(checkRole("ADMIN"));
 

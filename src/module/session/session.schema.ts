@@ -18,7 +18,8 @@ function validateSchedule(schedule: { startTime: string; endTime: string }, ctx:
         });
     }
 
-    const day = start.getUTCDay();
+    const startUTC7 = new Date(start.getTime() + 7 * 60 * 60 * 1000);
+    const day = startUTC7.getUTCDay();
     if (day === 0 || day === 6) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,

@@ -16,7 +16,7 @@ const prisma = new PrismaClient({ adapter });
 
 function at(hour: number, minute: number): Date {
     const d = new Date();
-    d.setHours(hour, minute, 0, 0);
+    d.setUTCHours(hour, minute, 0, 0);
     return d;
 }
 

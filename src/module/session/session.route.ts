@@ -66,6 +66,15 @@ router.delete(
     sessionController.deleteSession,
 );
 
+router.get(
+    "/:sessionId/roster",
+    checkRole(Role.ADMIN),
+    validateSchema({
+        params: sessionIdParamSchema.shape.params,
+    }),
+    sessionController.getSessionRoster,
+);
+
 router.use(
     "/:sessionId/trainer-attendances", trainerAttendanceRouter
 );

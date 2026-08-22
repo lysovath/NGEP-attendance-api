@@ -78,6 +78,20 @@ class SessionController {
             next(error);
         }
     }
+
+    async getSessionRoster(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { sessionId } = req.params;
+            const roster = await sessionService.getSessionRoster(Number(sessionId));
+            return res.status(200).json({
+                success: true,
+                message: "Session roster retrieved successfully",
+                data: roster,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 export default new SessionController();

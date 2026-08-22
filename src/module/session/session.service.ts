@@ -1,7 +1,8 @@
 import ApiError from "../../utils/ApiError.js";
 import { prisma } from "../../lib/prisma.js";
 import removeUndefined from "../../utils/removeUndefined.js";
-import { SessionType } from "@prisma/client";
+import { SessionType, Role } from "@prisma/client";
+import { toUtcDateOnly } from "../../utils/date.js";
 
 interface SessionData {
     name: string;
@@ -161,6 +162,96 @@ class SessionService {
                 throw error;
             }
             throw ApiError.internal("Failed to delete session");
+        }
+    }
+
+    async getSessionRoster(sessionId: number) {
+        try {
+            const session = await prisma.session.findUnique({
+                where: { id: sessionId },
+                select: {
+                    id: true,
+                    name: true,
+                    startTime: true,
+                    groupCourse: {
+                        select: {
+                            groupId: true,
+                            group: { select: { id: true, name: true } },
+                        },
+                    },
+                },
+            });
+
+            if (!session) {
+                throw ApiError.notFound("Session not found");
+            }
+
+            const groupId = session.groupCourse.groupId;
+            const sessionDate = toUtcDateOnly(session.startTime);
+
+            const overrides = await prisma.groupOverride.findMany({
+                where: { date: sessionDate },
+                select: { traineeId: true, groupId: true },
+            });
+
+            const overriddenTraineeIds = overrides.map((o) => o.traineeId);
+            const movedInIds = overrides
+                .filter((o) => o.groupId === groupId)
+                .map((o) => o.traineeId);
+
+            const rosterTrainees = await prisma.trainee.findMany({
+                where: {
+                    OR: [
+                        { groupId, id: { notIn: overriddenTraineeIds } },
+                        { id: { in: movedInIds } },
+                    ],
+                },
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    studentId: true,
+                    groupId: true,
+                    group: { select: { id: true, name: true } },
+                },
+                orderBy: { name: "asc" },
+            });
+
+            const homeTrainees = await prisma.trainee.findMany({
+                where: { groupId },
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    studentId: true,
+                    groupId: true,
+                    group: { select: { id: true, name: true } },
+                },
+                orderBy: { name: "asc" },
+            });
+
+            const allGroups = await prisma.group.findMany({
+                select: { id: true, name: true },
+                orderBy: { name: "asc" },
+            });
+
+            return {
+                session: {
+                    id: session.id,
+                    name: session.name,
+                    startTime: session.startTime,
+                    groupId,
+                    groupName: session.groupCourse.group.name,
+                },
+                roster: rosterTrainees,
+                homeTrainees,
+                allGroups,
+            };
+        } catch (error) {
+            if (error instanceof ApiError) {
+                throw error;
+            }
+            throw ApiError.internal("Failed to retrieve session roster");
         }
     }
 }
